@@ -124,43 +124,43 @@ if (!regl) {
     world.SetDebugDraw(debugDraw);
 } else {
     cmd = regl({
-      vert: `
-        precision mediump float;
+        vert: `
+            precision mediump float;
 
-        uniform vec2 origin;
-        uniform mat4 camera;
-        attribute vec2 position;
+            uniform vec2 origin;
+            uniform mat4 camera;
+            attribute vec2 position;
 
-        void main() {
-          vec4 worldPosition = vec4(origin + position * 0.1, 0, 1.0);
-          gl_Position = camera * worldPosition;
-        }
-      `,
+            void main() {
+                vec4 worldPosition = vec4(origin + position * 0.1, 0, 1.0);
+                gl_Position = camera * worldPosition;
+            }
+        `,
 
-      frag: `
-        precision mediump float;
+        frag: `
+            precision mediump float;
 
-        void main() {
-          gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
-        }
-      `,
+            void main() {
+                gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+            }
+        `,
 
-      attributes: {
-        position: regl.buffer([
-          [ -1, -1 ],
-          [ 1, -1 ],
-          [ 1,  1 ],
-          [ -1, 1 ]
-        ])
-      },
+        attributes: {
+            position: regl.buffer([
+                [ -1, -1 ],
+                [ 1, -1 ],
+                [ 1,  1 ],
+                [ -1, 1 ]
+            ])
+        },
 
-      uniforms: {
-        origin: regl.prop('origin'),
-        camera: regl.prop('camera')
-      },
+        uniforms: {
+            origin: regl.prop('origin'),
+            camera: regl.prop('camera')
+        },
 
-      primitive: 'triangle fan',
-      count: 4
+        primitive: 'triangle fan',
+        count: 4
     });
 }
 
