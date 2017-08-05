@@ -1,5 +1,7 @@
+const onecolor = require('onecolor');
 const vec2 = require('gl-matrix').vec2;
 const vec3 = require('gl-matrix').vec3;
+const vec4 = require('gl-matrix').vec4;
 const mat4 = require('gl-matrix').mat4;
 const b2Vec2 = require('box2dweb').Common.Math.b2Vec2;
 const b2World = require('box2dweb').Dynamics.b2World;
@@ -54,8 +56,11 @@ function doodoo() {
     const main = world.CreateBody(bodyDef);
     main.CreateFixture(fixDef);
 
+    const color = new onecolor.HSL(0.05 + Math.random() * 0.15, 0.6 + Math.random() * 0.3, 0.4 + Math.random() * 0.2);
+
     main.particleRadius = radius;
     main.particleSpeed = 0;
+    main.particleColor = color.rgb();
 
     return main;
 }
@@ -177,7 +182,7 @@ if (!regl) {
                 vec2 o2 = origin * origin;
                 place = sqrt(o2.x + o2.y);
 
-                float initialFade = clamp(place * 2.0 - 1.0, 0.0, 1.0);
+                float initialFade = clamp(place * 20.0 - 1.9, 0.0, 1.0);
                 float speedFade = 1.0 / (1.0 + speed * 1.5);
 
                 float pulseSpeed = 1.2 * sin(time * 0.8);
@@ -205,6 +210,7 @@ if (!regl) {
             precision mediump float;
 
             uniform float radius;
+            uniform vec4 color;
 
             varying float place;
             varying float instability;
@@ -214,7 +220,7 @@ if (!regl) {
             ${ditherLib}
 
             void main() {
-                gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+                gl_FragColor = color;
 
                 // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
                 vec2 fp2 = facePosition * facePosition;
@@ -242,6 +248,7 @@ if (!regl) {
         uniforms: {
             time: regl.prop('time'),
             origin: regl.prop('origin'),
+            color: regl.prop('color'),
             radius: regl.prop('radius'),
             speed: regl.prop('speed'),
             camera: regl.prop('camera')
@@ -253,6 +260,7 @@ if (!regl) {
 }
 
 const bodyOrigin = vec2.create();
+const bodyColor = vec4.create();
 const cameraPosition = vec3.create();
 const camera = mat4.create();
 
@@ -311,13 +319,14 @@ const timer = new Timer(STEP, 10, function () {
         world.DrawDebugData();
     } else {
         regl.clear({
-            color: [ 0.7, 1, 1, 1 ],
+            color: [ 0.02, 0.015, 0.01, 1 ],
             depth: 1
         });
 
         bodyList.forEach((b, bi) => {
             const pos = b.GetPosition();
             vec2.set(bodyOrigin, pos.x, pos.y);
+            vec4.set(bodyColor, b.particleColor.red(), b.particleColor.green(), b.particleColor.blue(), 1)
 
             // dampen the speed (@todo this in physics step)
             const vel = b.GetLinearVelocity();
@@ -326,6 +335,7 @@ const timer = new Timer(STEP, 10, function () {
             cmd({
                 time: now,
                 origin: bodyOrigin,
+                color: bodyColor,
                 radius: b.particleRadius,
                 speed: speed,
                 camera: camera
