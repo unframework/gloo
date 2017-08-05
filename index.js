@@ -71,7 +71,7 @@ function baabaa() {
         const offset = Math.random();
 
         const circ = 2 * Math.PI * dist;
-        const size = dist * 0.15 + Math.sqrt(dist) * 0.8;
+        const size = dist * 0.4 + Math.sqrt(dist) * 0.5 - 0.2;
         const maxAmount = Math.floor(circ / size);
 
         for (var i = 0; i < maxAmount; i++) {
@@ -83,7 +83,7 @@ function baabaa() {
             )
 
             fixDef.shape.SetAsOrientedBox(
-                0.35 * size - 0.2 - Math.random() * 0.1,
+                0.45 * size - 0.5 - Math.random() * 0.1,
                 (thickness - Math.random() * 0.1) * 0.5,
                 pos,
                 angle + (Math.random() > 0.0 ? Math.PI * 0.5 : 0)
@@ -123,7 +123,7 @@ const imp = new b2Vec2();
 
 const timer = new Timer(STEP, function () {
 	if (countdown <= 0) {
-		countdown += 0.025 + bodyList.length * 0.0005;
+		countdown += 0.005 + bodyList.length * 0.0005;
 
 		bodyList.push(doodoo());
 
