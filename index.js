@@ -190,7 +190,7 @@ if (!regl) {
                 );
 
                 vec4 worldPosition = vec4(
-                    origin + position * radius * initialFade * pulse * (1.0 + instability * 0.5),
+                    origin + position * radius * initialFade * pulse * (1.0 + instability * 0.5) * (1.0 + 0.2 * place * (1.0 - 0.8 * instability)),
                     place * 0.2 + place * place * 0.03,
                     1.0
                 );
@@ -271,7 +271,7 @@ const timer = new Timer(STEP, 10, function () {
             const pos = b.GetPosition();
             const l = Math.hypot(pos.x, pos.y);
 
-            if (l > 10) {
+            if (l > 20) {
                 delList.push(bi);
 
                 return;
@@ -294,10 +294,10 @@ const timer = new Timer(STEP, 10, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    vec3.set(cameraPosition, 15, 15, -15);
+    vec3.set(cameraPosition, 15, 15, -25);
 
     mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
-    mat4.rotateX(camera, camera, -Math.PI / 3);
+    mat4.rotateX(camera, camera, -Math.PI / 4);
     mat4.rotateZ(camera, camera, Math.PI / 4);
     mat4.translate(camera, camera, cameraPosition);
     mat4.rotateZ(camera, camera, now * 0.05);
