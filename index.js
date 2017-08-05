@@ -190,7 +190,7 @@ if (!regl) {
 
                 vec4 worldPosition = vec4(
                     origin + position * radius * initialFade * pulse * (1.0 + instability * 0.5),
-                    0,
+                    place * 0.2 + place * place * 0.03,
                     1.0
                 );
                 gl_Position = camera * worldPosition;
@@ -285,12 +285,13 @@ const timer = new Timer(STEP, 10, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    vec3.set(cameraPosition, 15, 15, -12);
+    vec3.set(cameraPosition, 15, 15, -15);
 
     mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
     mat4.rotateX(camera, camera, -Math.PI / 3);
     mat4.rotateZ(camera, camera, Math.PI / 4);
     mat4.translate(camera, camera, cameraPosition);
+    mat4.rotateZ(camera, camera, now * 0.05);
 
     if (!regl) {
         world.DrawDebugData();
