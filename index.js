@@ -38,11 +38,13 @@ const regl = require('regl')({
 const world = new b2World(new b2Vec2(0, 0), true);
 
 function doodoo() {
+    const radius = 0.1 + Math.random() * 0.08;
+
     const fixDef = new b2FixtureDef();
     fixDef.density = 2.0;
     fixDef.friction = 0.0;
     fixDef.restitution = 0.0;
-    fixDef.shape = new b2CircleShape(0.1 + Math.random() * 0.08);
+    fixDef.shape = new b2CircleShape(radius);
 
     const bodyDef = new b2BodyDef();
     bodyDef.type = b2Body.b2_dynamicBody;
@@ -51,6 +53,8 @@ function doodoo() {
 
     const main = world.CreateBody(bodyDef);
     main.CreateFixture(fixDef);
+
+    main.particleRadius = radius;
 
     return main;
 }
@@ -128,11 +132,16 @@ if (!regl) {
             precision mediump float;
 
             uniform vec2 origin;
+            uniform float radius;
             uniform mat4 camera;
             attribute vec2 position;
 
             void main() {
-                vec4 worldPosition = vec4(origin + position * 0.1, 0, 1.0);
+                vec2 o2 = origin * origin;
+                float place = sqrt(o2.x + o2.y);
+                float initialFade = clamp(place * 2.0, 0.0, 1.0);
+
+                vec4 worldPosition = vec4(origin + position * radius * initialFade, 0, 1.0);
                 gl_Position = camera * worldPosition;
             }
         `,
@@ -156,6 +165,7 @@ if (!regl) {
 
         uniforms: {
             origin: regl.prop('origin'),
+            radius: regl.prop('radius'),
             camera: regl.prop('camera')
         },
 
@@ -232,6 +242,7 @@ const timer = new Timer(STEP, 10, function () {
 
             cmd({
                 origin: bodyOrigin,
+                radius: b.particleRadius,
                 camera: camera
             });
         });
