@@ -299,12 +299,12 @@ const timer = new Timer(STEP, 10, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    vec3.set(cameraPosition, 15, 15, -25);
+    const dist = 1 + 0.35 * Math.sin(now * 0.17)
+    vec3.set(cameraPosition, 0, -1, -25 * dist);
 
     mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
-    mat4.rotateX(camera, camera, -Math.PI / 4);
-    mat4.rotateZ(camera, camera, Math.PI / 4);
     mat4.translate(camera, camera, cameraPosition);
+    mat4.rotateX(camera, camera, -Math.PI / 4 + Math.sin(now * 0.31) * 0.2);
     mat4.rotateZ(camera, camera, now * 0.05);
 
     if (!regl) {
