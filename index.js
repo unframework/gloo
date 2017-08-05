@@ -144,12 +144,14 @@ if (!regl) {
                 float place = sqrt(o2.x + o2.y);
 
                 float initialFade = clamp(place * 2.0 - 1.0, 0.0, 1.0);
-                float speedFade = 1.0 / (1.0 + speed);
+                float speedFade = 1.0 / (1.0 + speed * 1.5);
 
                 float pulseSpeed = 1.2 * sin(time * 0.8);
-                float pulse = 1.0 + 0.3 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
+                float pulse = 1.0 + 0.2 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
 
-                vec4 worldPosition = vec4(origin + position * radius * initialFade * speedFade * pulse, 0, 1.0);
+                float flicker = step(0.5, fract((time + place) * 100.0)) * clamp(speed * 0.6, 0.0, 1.0);
+
+                vec4 worldPosition = vec4(origin + position * radius * initialFade * (speedFade + flicker * 0.3) * pulse, 0, 1.0);
                 gl_Position = camera * worldPosition;
             }
         `,
