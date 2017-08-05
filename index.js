@@ -1,5 +1,5 @@
+const vec2 = require('gl-matrix').vec2;
 const vec3 = require('gl-matrix').vec3;
-const vec4 = require('gl-matrix').vec4;
 const mat4 = require('gl-matrix').mat4;
 const b2Vec2 = require('box2dweb').Common.Math.b2Vec2;
 const b2World = require('box2dweb').Dynamics.b2World;
@@ -127,11 +127,12 @@ if (!regl) {
       vert: `
         precision mediump float;
 
+        uniform vec2 origin;
         uniform mat4 camera;
         attribute vec2 position;
 
         void main() {
-          vec4 worldPosition = vec4(position, 0, 1.0);
+          vec4 worldPosition = vec4(origin + position * 0.1, 0, 1.0);
           gl_Position = camera * worldPosition;
         }
       `,
@@ -154,6 +155,7 @@ if (!regl) {
       },
 
       uniforms: {
+        origin: regl.prop('origin'),
         camera: regl.prop('camera')
       },
 
@@ -162,6 +164,7 @@ if (!regl) {
     });
 }
 
+const bodyOrigin = vec2.create();
 const cameraPosition = vec3.create();
 const camera = mat4.create();
 
@@ -208,10 +211,10 @@ const timer = new Timer(STEP, 10, function () {
 
     world.Step(STEP, 3, 3);
 }, function () {
-    vec3.set(cameraPosition, 21, 21, -31);
+    vec3.set(cameraPosition, 15, 15, -12);
 
-    mat4.perspective(camera, 0.3, canvas.width / canvas.height, 1, 80);
-    mat4.rotateX(camera, camera, -Math.PI / 4);
+    mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
+    mat4.rotateX(camera, camera, -Math.PI / 3);
     mat4.rotateZ(camera, camera, Math.PI / 4);
     mat4.translate(camera, camera, cameraPosition);
 
@@ -223,8 +226,14 @@ const timer = new Timer(STEP, 10, function () {
             depth: 1
         });
 
-        cmd({
-            camera: camera
+        bodyList.forEach((b, bi) => {
+            const pos = b.GetPosition();
+            vec2.set(bodyOrigin, pos.x, pos.y);
+
+            cmd({
+                origin: bodyOrigin,
+                camera: camera
+            });
         });
     }
 });
