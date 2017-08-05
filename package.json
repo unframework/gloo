@@ -4,13 +4,15 @@
   "description": "Glooo",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dist": "mkdirp dist && cp index.html dist && browserify index.js > dist/index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "box2dweb": "^2.1.0-b",
     "browserify": "^14.4.0",
+    "mkdirp": "^0.5.1",
     "onecolor": "^3.0.4"
   }
 }
