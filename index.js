@@ -97,7 +97,7 @@ function baabaa() {
 baabaa();
 
 for (var i = 0; i < 100; i++) {
-	// doodoo();
+    // doodoo();
 }
 
 // setup debug draw
@@ -122,10 +122,10 @@ const delList = [];
 const imp = new b2Vec2();
 
 const timer = new Timer(STEP, 10, function () {
-	if (countdown <= 0) {
-		countdown += 0.005 + bodyList.length * 0.0005;
+    if (countdown <= 0) {
+        countdown += 0.005 + bodyList.length * 0.0005;
 
-		bodyList.push(doodoo());
+        bodyList.push(doodoo());
 
         delList.length = 0;
 
@@ -150,12 +150,12 @@ const timer = new Timer(STEP, 10, function () {
             bodyList.splice(bi, 1);
             world.DestroyBody(b);
         });
-	}
+    } else {
+        countdown -= STEP;
+    }
 
-	countdown -= STEP;
-
-	world.Step(STEP, 3, 3);
+    world.Step(STEP, 3, 3);
 }, function () {
-	world.DrawDebugData();
+    world.DrawDebugData();
 });
 
