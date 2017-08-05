@@ -168,13 +168,14 @@ if (!regl) {
             uniform mat4 camera;
             attribute vec2 position;
 
+            varying float place;
             varying float instability;
             varying float flicker;
             varying vec2 facePosition;
 
             void main() {
                 vec2 o2 = origin * origin;
-                float place = sqrt(o2.x + o2.y);
+                place = sqrt(o2.x + o2.y);
 
                 float initialFade = clamp(place * 2.0 - 1.0, 0.0, 1.0);
                 float speedFade = 1.0 / (1.0 + speed * 1.5);
@@ -203,6 +204,9 @@ if (!regl) {
         frag: `
             precision mediump float;
 
+            uniform float radius;
+
+            varying float place;
             varying float instability;
             varying float flicker;
             varying vec2 facePosition;
@@ -218,7 +222,8 @@ if (!regl) {
                     discard;
                 }
 
-                float alpha = (1.0 - instability) + flicker;
+                float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.05);
+                float alpha = baseAlpha - instability + instability * flicker;
                 if (dither4x4(gl_FragCoord.xy) > alpha) {
                     discard;
                 }
