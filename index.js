@@ -32,6 +32,17 @@ document.body.appendChild(canvas);
 canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
 
+const div = document.createElement('div');
+div.style.position = 'fixed';
+div.style.bottom = '10px';
+div.style.right = '20px';
+div.style.opacity = 0.2;
+div.style.color = '#fff';
+div.style.fontFamily = 'Arial';
+div.style.fontSize = '24px';
+div.appendChild(document.createTextNode('@unframework'));
+document.body.appendChild(div);
+
 const regl = require('regl')({
     canvas: canvas
 })
