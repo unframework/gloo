@@ -55,6 +55,7 @@ function doodoo() {
     main.CreateFixture(fixDef);
 
     main.particleRadius = radius;
+    main.particleSpeed = 0;
 
     return main;
 }
@@ -133,15 +134,17 @@ if (!regl) {
 
             uniform vec2 origin;
             uniform float radius;
+            uniform float speed;
             uniform mat4 camera;
             attribute vec2 position;
 
             void main() {
                 vec2 o2 = origin * origin;
                 float place = sqrt(o2.x + o2.y);
-                float initialFade = clamp(place * 2.0, 0.0, 1.0);
+                float initialFade = clamp(place * 2.0 - 1.0, 0.0, 1.0);
+                float speedFade = 1.0 / (1.0 + speed);
 
-                vec4 worldPosition = vec4(origin + position * radius * initialFade, 0, 1.0);
+                vec4 worldPosition = vec4(origin + position * radius * initialFade * speedFade, 0, 1.0);
                 gl_Position = camera * worldPosition;
             }
         `,
@@ -166,6 +169,7 @@ if (!regl) {
         uniforms: {
             origin: regl.prop('origin'),
             radius: regl.prop('radius'),
+            speed: regl.prop('speed'),
             camera: regl.prop('camera')
         },
 
@@ -240,9 +244,14 @@ const timer = new Timer(STEP, 10, function () {
             const pos = b.GetPosition();
             vec2.set(bodyOrigin, pos.x, pos.y);
 
+            // dampen the speed (@todo this in physics step)
+            const vel = b.GetLinearVelocity();
+            const speed = b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
+
             cmd({
                 origin: bodyOrigin,
                 radius: b.particleRadius,
+                speed: speed,
                 camera: camera
             });
         });
