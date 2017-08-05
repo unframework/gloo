@@ -41,7 +41,7 @@ function doodoo() {
     const fixDef = new b2FixtureDef();
     fixDef.density = 2.0;
     fixDef.friction = 0.0;
-    fixDef.restitution = 0.1;
+    fixDef.restitution = 0.0;
     fixDef.shape = new b2CircleShape(0.1 + Math.random() * 0.08);
 
     const bodyDef = new b2BodyDef();
@@ -59,7 +59,7 @@ function baabaa() {
     const fixDef = new b2FixtureDef()
     fixDef.density = 200.0
     fixDef.friction = 0.0
-    fixDef.restitution = 0.1
+    fixDef.restitution = 0.0
     fixDef.shape = new b2PolygonShape()
 
     const bodyDef = new b2BodyDef()
