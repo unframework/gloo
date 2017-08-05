@@ -170,6 +170,7 @@ if (!regl) {
 
             varying float instability;
             varying float flicker;
+            varying vec2 facePosition;
 
             void main() {
                 vec2 o2 = origin * origin;
@@ -179,7 +180,7 @@ if (!regl) {
                 float speedFade = 1.0 / (1.0 + speed * 1.5);
 
                 float pulseSpeed = 1.2 * sin(time * 0.8);
-                float pulse = 1.0 + 0.2 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
+                float pulse = 1.0 + 0.1 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
 
                 instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
                 flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
@@ -193,6 +194,8 @@ if (!regl) {
                     place * 0.2 + place * place * 0.03,
                     1.0
                 );
+                facePosition = position;
+
                 gl_Position = camera * worldPosition;
             }
         `,
@@ -202,6 +205,7 @@ if (!regl) {
 
             varying float instability;
             varying float flicker;
+            varying vec2 facePosition;
 
             ${ditherLib}
 
@@ -209,6 +213,11 @@ if (!regl) {
                 gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
 
                 // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
+                vec2 fp2 = facePosition * facePosition;
+                if (sqrt(fp2.x + fp2.y) > 1.0) {
+                    discard;
+                }
+
                 float alpha = (1.0 - instability) + flicker;
                 if (dither4x4(gl_FragCoord.xy) > alpha) {
                     discard;
