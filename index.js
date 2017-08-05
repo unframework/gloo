@@ -35,7 +35,7 @@ function doodoo() {
     fixDef.density = 1.0;
     fixDef.friction = 2.0;
     fixDef.restitution = 0.1;
-    fixDef.shape = new b2CircleShape(0.5);
+    fixDef.shape = new b2CircleShape(0.2);
 
     const bodyDef = new b2BodyDef();
     bodyDef.type = b2Body.b2_dynamicBody;
@@ -60,30 +60,35 @@ function baabaa() {
 
     const bumperBody = world.CreateBody(bodyDef)
 
-    var lastAngle = 0;
-    const maxDist = 15;
-    const maxAmount = 20;
+    const maxRows = 8;
 
-    for (var i = 0; i < maxAmount; i++) {
-        // avoid last angle
-        const angle = lastAngle + 1 + (Math.PI * 2 - 2) * Math.random();
-        const dist = 2 + maxDist * (i / maxAmount) + 0.25 * Math.random();
+    for (var r = 1; r < maxRows; r++) {
+        const dist = 1 + 0.2 * r * r + r * 0.8;
+        const thickness = 0.4 + r * 0.3;
 
-        const pos = new b2Vec2(
-            dist * Math.cos(angle),
-            dist * Math.sin(angle)
-        )
+        const offset = Math.random();
 
-        fixDef.shape.SetAsOrientedBox(
-            Math.sqrt(dist) * (0.8 + Math.random() * 0.2),
-            0.3 + Math.random() * 0.1,
-            pos,
-            angle + (Math.random() > 0.0 ? Math.PI * 0.5 : 0)
-        )
+        const circ = 2 * Math.PI * dist;
+        const size = Math.sqrt(dist) * 0.8;
+        const maxAmount = Math.floor(circ / size);
 
-        bumperBody.CreateFixture(fixDef)
+        for (var i = 0; i < maxAmount; i++) {
+            const angle = (i / maxAmount) * (Math.PI * 2) + offset;
 
-        lastAngle = angle;
+            const pos = new b2Vec2(
+                dist * Math.cos(angle),
+                dist * Math.sin(angle)
+            )
+
+            fixDef.shape.SetAsOrientedBox(
+                0.4 * size - 0.1 - Math.random() * 0.1,
+                (thickness + Math.random() * 0.1) * 0.5,
+                pos,
+                angle + (Math.random() > 0.0 ? Math.PI * 0.5 : 0)
+            )
+
+            bumperBody.CreateFixture(fixDef)
+        }
     }
 }
 
