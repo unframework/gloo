@@ -1,3 +1,6 @@
+const vec3 = require('gl-matrix').vec3;
+const vec4 = require('gl-matrix').vec4;
+const mat4 = require('gl-matrix').mat4;
 const b2Vec2 = require('box2dweb').Common.Math.b2Vec2;
 const b2World = require('box2dweb').Dynamics.b2World;
 const b2FixtureDef = require('box2dweb').Dynamics.b2FixtureDef;
@@ -26,6 +29,10 @@ document.body.appendChild(canvas);
 
 canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
+
+const regl = require('regl')({
+    canvas: canvas
+})
 
 // wurld
 const world = new b2World(new b2Vec2(0, 0), true);
@@ -100,18 +107,63 @@ for (var i = 0; i < 100; i++) {
     // doodoo();
 }
 
-// setup debug draw
-const ctx = canvas.getContext('2d');
-ctx.translate(canvas.width / 2, canvas.height / 2);
-ctx.scale(1, -1);
+// setup draw
+const debugDraw = new b2DebugDraw();
+var cmd;
 
-var debugDraw = new b2DebugDraw();
-debugDraw.SetSprite(ctx);
-debugDraw.SetDrawScale(30);
-debugDraw.SetFillAlpha(0.3);
-debugDraw.SetLineThickness(1.0);
-debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
-world.SetDebugDraw(debugDraw);
+if (!regl) {
+    const ctx = canvas.getContext('2d');
+    ctx.translate(canvas.width / 2, canvas.height / 2);
+    ctx.scale(1, -1);
+
+    debugDraw.SetSprite(ctx);
+    debugDraw.SetDrawScale(30);
+    debugDraw.SetFillAlpha(0.3);
+    debugDraw.SetLineThickness(1.0);
+    debugDraw.SetFlags(b2DebugDraw.e_shapeBit | b2DebugDraw.e_jointBit);
+    world.SetDebugDraw(debugDraw);
+} else {
+    cmd = regl({
+      vert: `
+        precision mediump float;
+
+        uniform mat4 camera;
+        attribute vec2 position;
+
+        void main() {
+          vec4 worldPosition = vec4(position, 0, 1.0);
+          gl_Position = camera * worldPosition;
+        }
+      `,
+
+      frag: `
+        precision mediump float;
+
+        void main() {
+          gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+        }
+      `,
+
+      attributes: {
+        position: regl.buffer([
+          [ -1, -1 ],
+          [ 1, -1 ],
+          [ 1,  1 ],
+          [ -1, 1 ]
+        ])
+      },
+
+      uniforms: {
+        camera: regl.prop('camera')
+      },
+
+      primitive: 'triangle fan',
+      count: 4
+    });
+}
+
+const cameraPosition = vec3.create();
+const camera = mat4.create();
 
 const STEP = 1 / 60.0;
 
@@ -156,6 +208,24 @@ const timer = new Timer(STEP, 10, function () {
 
     world.Step(STEP, 3, 3);
 }, function () {
-    world.DrawDebugData();
+    vec3.set(cameraPosition, 21, 21, -31);
+
+    mat4.perspective(camera, 0.3, canvas.width / canvas.height, 1, 80);
+    mat4.rotateX(camera, camera, -Math.PI / 4);
+    mat4.rotateZ(camera, camera, Math.PI / 4);
+    mat4.translate(camera, camera, cameraPosition);
+
+    if (!regl) {
+        world.DrawDebugData();
+    } else {
+        regl.clear({
+            color: [ 0.7, 1, 1, 1 ],
+            depth: 1
+        });
+
+        cmd({
+            camera: camera
+        });
+    }
 });
 
