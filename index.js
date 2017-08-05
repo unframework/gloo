@@ -108,6 +108,35 @@ function baabaa() {
 
 baabaa();
 
+const ditherLib = `
+float dither4x4(vec2 position) {
+  int x = int(mod(position.x, 4.0));
+  int y = int(mod(position.y, 4.0));
+  int index = x + y * 4;
+
+  if (x < 8) {
+    if (index == 0) return 0.0625;
+    if (index == 1) return 0.5625;
+    if (index == 2) return 0.1875;
+    if (index == 3) return 0.6875;
+    if (index == 4) return 0.8125;
+    if (index == 5) return 0.3125;
+    if (index == 6) return 0.9375;
+    if (index == 7) return 0.4375;
+    if (index == 8) return 0.25;
+    if (index == 9) return 0.75;
+    if (index == 10) return 0.125;
+    if (index == 11) return 0.625;
+    if (index == 12) return 1.0;
+    if (index == 13) return 0.5;
+    if (index == 14) return 0.875;
+    if (index == 15) return 0.375;
+  }
+
+  // return limit;
+}
+`;
+
 for (var i = 0; i < 100; i++) {
     // doodoo();
 }
@@ -139,6 +168,9 @@ if (!regl) {
             uniform mat4 camera;
             attribute vec2 position;
 
+            varying float instability;
+            varying float flicker;
+
             void main() {
                 vec2 o2 = origin * origin;
                 float place = sqrt(o2.x + o2.y);
@@ -149,9 +181,18 @@ if (!regl) {
                 float pulseSpeed = 1.2 * sin(time * 0.8);
                 float pulse = 1.0 + 0.2 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
 
-                float flicker = step(0.5, fract((time + place) * 100.0)) * clamp(speed * 0.6, 0.0, 1.0);
+                instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
+                flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
+                    sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
+                    0.0,
+                    1.0
+                );
 
-                vec4 worldPosition = vec4(origin + position * radius * initialFade * (speedFade + flicker * 0.3) * pulse, 0, 1.0);
+                vec4 worldPosition = vec4(
+                    origin + position * radius * initialFade * pulse * (1.0 + instability * 0.5),
+                    0,
+                    1.0
+                );
                 gl_Position = camera * worldPosition;
             }
         `,
@@ -159,8 +200,19 @@ if (!regl) {
         frag: `
             precision mediump float;
 
+            varying float instability;
+            varying float flicker;
+
+            ${ditherLib}
+
             void main() {
                 gl_FragColor = vec4(1.0, 0.5, 0.2, 1.0);
+
+                // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
+                float alpha = (1.0 - instability) + flicker;
+                if (dither4x4(gl_FragCoord.xy) > alpha) {
+                    discard;
+                }
             }
         `,
 
