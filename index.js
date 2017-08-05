@@ -40,7 +40,7 @@ div.style.opacity = 0.2;
 div.style.color = '#fff';
 div.style.fontFamily = 'Arial';
 div.style.fontSize = '24px';
-div.appendChild(document.createTextNode('@unframework'));
+div.appendChild(document.createTextNode('@line_ctrl'));
 document.body.appendChild(div);
 
 const regl = require('regl')({
