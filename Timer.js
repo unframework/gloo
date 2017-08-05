@@ -11,15 +11,15 @@ function Timer(physicsStepDuration, onTick, onFrame) {
         }
 
         const time = performance.now();
-		const elapsed = Math.min(0.1, time - lastTime);
+        const elapsed = Math.min(0.1, (time - lastTime) / 1000);
 
         lastTime = time;
 
         physicsStepAccumulator += elapsed;
 
         while (physicsStepAccumulator > physicsStepDuration) {
-        	onTick();
-        	physicsStepAccumulator -= physicsStepDuration;
+            onTick();
+            physicsStepAccumulator -= physicsStepDuration;
         }
 
         onFrame();
