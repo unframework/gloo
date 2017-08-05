@@ -1,6 +1,6 @@
-function Timer(physicsStepDuration, onTick, onFrame) {
+function Timer(physicsStepDuration, initialRun, onTick, onFrame) {
     var lastTime = performance.now(),
-        physicsStepAccumulator = 0,
+        physicsStepAccumulator = initialRun,
         self = this;
 
     this._isDestroyed = false;
@@ -28,7 +28,7 @@ function Timer(physicsStepDuration, onTick, onFrame) {
         requestAnimationFrame(update);
     }
 
-    requestAnimationFrame(update);
+    update();
 }
 
 Timer.prototype.destroy = function () {

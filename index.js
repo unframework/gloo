@@ -121,7 +121,7 @@ const delList = [];
 
 const imp = new b2Vec2();
 
-const timer = new Timer(STEP, function () {
+const timer = new Timer(STEP, 20, function () {
 	if (countdown <= 0) {
 		countdown += 0.005 + bodyList.length * 0.0005;
 
