@@ -132,6 +132,7 @@ if (!regl) {
         vert: `
             precision mediump float;
 
+            uniform float time;
             uniform vec2 origin;
             uniform float radius;
             uniform float speed;
@@ -141,10 +142,14 @@ if (!regl) {
             void main() {
                 vec2 o2 = origin * origin;
                 float place = sqrt(o2.x + o2.y);
+
                 float initialFade = clamp(place * 2.0 - 1.0, 0.0, 1.0);
                 float speedFade = 1.0 / (1.0 + speed);
 
-                vec4 worldPosition = vec4(origin + position * radius * initialFade * speedFade, 0, 1.0);
+                float pulseSpeed = 1.2 * sin(time * 0.8);
+                float pulse = 1.0 + 0.3 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
+
+                vec4 worldPosition = vec4(origin + position * radius * initialFade * speedFade * pulse, 0, 1.0);
                 gl_Position = camera * worldPosition;
             }
         `,
@@ -167,6 +172,7 @@ if (!regl) {
         },
 
         uniforms: {
+            time: regl.prop('time'),
             origin: regl.prop('origin'),
             radius: regl.prop('radius'),
             speed: regl.prop('speed'),
@@ -224,7 +230,7 @@ const timer = new Timer(STEP, 10, function () {
     }
 
     world.Step(STEP, 3, 3);
-}, function () {
+}, function (now) {
     vec3.set(cameraPosition, 15, 15, -12);
 
     mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
@@ -249,6 +255,7 @@ const timer = new Timer(STEP, 10, function () {
             const speed = b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
 
             cmd({
+                time: now,
                 origin: bodyOrigin,
                 radius: b.particleRadius,
                 speed: speed,

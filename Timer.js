@@ -22,7 +22,7 @@ function Timer(physicsStepDuration, initialRun, onTick, onFrame) {
             physicsStepAccumulator -= physicsStepDuration;
         }
 
-        onFrame();
+        onFrame(time / 1000);
 
         // restart
         requestAnimationFrame(update);
