@@ -174,26 +174,24 @@ if (!regl) {
             precision mediump float;
 
             uniform float time;
+            uniform float pulse;
+            uniform float place;
             uniform vec2 origin;
             uniform float radius;
             uniform float speed;
             uniform mat4 camera;
             attribute vec2 position;
 
-            varying float place;
             varying float instability;
             varying float flicker;
             varying vec2 facePosition;
 
+            float computeParticleZ() {
+                return place * 0.2 + place * place * 0.03;
+            }
+
             void main() {
-                vec2 o2 = origin * origin;
-                place = sqrt(o2.x + o2.y);
-
                 float initialFade = clamp(place * 20.0 - 1.9, 0.0, 1.0);
-                float speedFade = 1.0 / (1.0 + speed * 1.5);
-
-                float pulseSpeed = 1.2 * sin(time * 0.8);
-                float pulse = 1.0 + 0.1 * clamp(sin(5.0 * time + pulseSpeed) * 10.0 - 9.0, 0.0, 1.0);
 
                 instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
                 flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
@@ -203,8 +201,8 @@ if (!regl) {
                 );
 
                 vec4 worldPosition = vec4(
-                    origin + position * radius * initialFade * pulse * (1.0 + instability * 0.5) * (1.0 + 0.2 * place * (1.0 - 0.8 * instability)),
-                    place * 0.2 + place * place * 0.03,
+                    origin + position * radius * initialFade * (1.0 + 0.1 * pulse) * (1.0 + instability * 0.5) * (1.0 + 0.2 * place * (1.0 - 0.8 * instability)),
+                    computeParticleZ(),
                     1.0
                 );
                 facePosition = position;
@@ -216,10 +214,10 @@ if (!regl) {
         frag: `
             precision mediump float;
 
+            uniform float place;
             uniform float radius;
             uniform vec4 color;
 
-            varying float place;
             varying float instability;
             varying float flicker;
             varying vec2 facePosition;
@@ -254,6 +252,8 @@ if (!regl) {
 
         uniforms: {
             time: regl.prop('time'),
+            pulse: regl.prop('pulse'),
+            place: regl.prop('place'),
             origin: regl.prop('origin'),
             color: regl.prop('color'),
             radius: regl.prop('radius'),
@@ -323,6 +323,9 @@ const timer = new Timer(STEP, 20, function () {
     mat4.rotateX(camera, camera, -Math.PI / 4 + Math.sin(now * 0.31) * 0.2);
     mat4.rotateZ(camera, camera, now * 0.05);
 
+    const pulseSpeed = 1.2 * Math.sin(now * 0.8);
+    const pulse = Math.max(0, Math.sin(5.0 * now + pulseSpeed) * 10.0 - 9.0);
+
     if (!regl) {
         world.DrawDebugData();
     } else {
@@ -342,6 +345,8 @@ const timer = new Timer(STEP, 20, function () {
 
             cmd({
                 time: now,
+                pulse: pulse,
+                place: vec2.length(bodyOrigin),
                 origin: bodyOrigin,
                 color: bodyColor,
                 radius: b.particleRadius,
