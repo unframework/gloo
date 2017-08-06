@@ -182,8 +182,7 @@ if (!regl) {
             uniform mat4 camera;
             attribute vec2 position;
 
-            varying float instability;
-            varying float flicker;
+            varying float alpha;
             varying vec2 facePosition;
 
             float computeParticleZ() {
@@ -191,15 +190,15 @@ if (!regl) {
             }
 
             void main() {
+                float instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
+
                 float spawnSizeFactor = clamp(place * 20.0 - 1.9, 0.0, 1.0);
                 float pulseSizeFactor = 1.0 + 0.1 * pulse;
-
-                instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
 
                 float unstableModeSizeFactor = 1.0 + instability * 0.5;
                 float stableGrowthSizeFactor = 1.0 + 0.2 * place * (1.0 - 0.8 * instability);
 
-                flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
+                float flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
                     sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
                     0.0,
                     1.0
@@ -215,6 +214,10 @@ if (!regl) {
                     computeParticleZ(),
                     1.0
                 );
+
+                float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.05);
+                alpha = baseAlpha - instability + instability * flicker;
+
                 facePosition = position;
 
                 gl_Position = camera * worldPosition;
@@ -224,12 +227,9 @@ if (!regl) {
         frag: `
             precision mediump float;
 
-            uniform float place;
-            uniform float radius;
             uniform vec4 color;
 
-            varying float instability;
-            varying float flicker;
+            varying float alpha;
             varying vec2 facePosition;
 
             ${ditherLib}
@@ -243,8 +243,6 @@ if (!regl) {
                     discard;
                 }
 
-                float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.05);
-                float alpha = baseAlpha - instability + instability * flicker;
                 if (dither4x4(gl_FragCoord.xy) > alpha) {
                     discard;
                 }
