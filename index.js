@@ -31,6 +31,7 @@ document.body.appendChild(canvas);
 
 canvas.width = canvas.offsetWidth;
 canvas.height = canvas.offsetHeight;
+const aspectRatio = canvas.height / canvas.width;
 
 const div = document.createElement('div');
 div.style.position = 'fixed';
@@ -173,6 +174,7 @@ if (!regl) {
         vert: `
             precision mediump float;
 
+            uniform float aspectRatio;
             uniform float time;
             uniform float pulse;
             uniform float place;
@@ -204,13 +206,8 @@ if (!regl) {
                     1.0
                 );
 
-                vec4 worldPosition = vec4(
-                    origin + position * radius * (
-                        spawnSizeFactor *
-                        pulseSizeFactor *
-                        unstableModeSizeFactor *
-                        stableGrowthSizeFactor
-                    ),
+                vec4 center = vec4(
+                    origin,
                     computeParticleZ(),
                     1.0
                 );
@@ -220,7 +217,12 @@ if (!regl) {
 
                 facePosition = position;
 
-                gl_Position = camera * worldPosition;
+                gl_Position = camera * center + 2.0 * vec4(position.x * aspectRatio, position.y, 0, 0) * radius * (
+                    spawnSizeFactor *
+                    pulseSizeFactor *
+                    unstableModeSizeFactor *
+                    stableGrowthSizeFactor
+                );
             }
         `,
 
@@ -259,6 +261,7 @@ if (!regl) {
         },
 
         uniforms: {
+            aspectRatio: regl.prop('aspectRatio'),
             time: regl.prop('time'),
             pulse: regl.prop('pulse'),
             place: regl.prop('place'),
@@ -278,6 +281,8 @@ const bodyOrigin = vec2.create();
 const bodyColor = vec4.create();
 const cameraPosition = vec3.create();
 const camera = mat4.create();
+const cameraX = vec4.create();
+const cameraY = vec4.create();
 
 const STEP = 1 / 60.0;
 
@@ -323,13 +328,18 @@ const timer = new Timer(STEP, 20, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    const dist = 1 + 0.35 * Math.sin(now * 0.17)
+    const dist = 1 + 0.65 * Math.sin(now * 1.17)
     vec3.set(cameraPosition, 0, -1, -25 * dist);
 
-    mat4.perspective(camera, 0.5, canvas.width / canvas.height, 1, 80);
+    mat4.perspective(camera, 0.8, canvas.width / canvas.height, 1, 80);
     mat4.translate(camera, camera, cameraPosition);
     mat4.rotateX(camera, camera, -Math.PI / 4 + Math.sin(now * 0.31) * 0.2);
     mat4.rotateZ(camera, camera, now * 0.05);
+
+    vec4.set(cameraX, 1, 0, 0, 1);
+    vec4.transformMat4(cameraX, cameraX, camera);
+    vec4.set(cameraY, 0, 1, 0, 1);
+    vec4.transformMat4(cameraY, cameraY, camera);
 
     const pulseSpeed = 1.2 * Math.sin(now * 0.8);
     const pulse = Math.max(0, Math.sin(5.0 * now + pulseSpeed) * 10.0 - 9.0);
@@ -352,6 +362,7 @@ const timer = new Timer(STEP, 20, function () {
             const speed = b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
 
             cmd({
+                aspectRatio: aspectRatio,
                 time: now,
                 pulse: pulse,
                 place: vec2.length(bodyOrigin),
