@@ -186,7 +186,7 @@ if (!regl) {
             varying vec2 facePosition;
 
             float computeParticleZ() {
-                return place * 0.2 + place * place * 0.03;
+                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place);
             }
 
             void main() {
