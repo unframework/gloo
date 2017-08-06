@@ -281,8 +281,6 @@ const bodyOrigin = vec2.create();
 const bodyColor = vec4.create();
 const cameraPosition = vec3.create();
 const camera = mat4.create();
-const cameraX = vec4.create();
-const cameraY = vec4.create();
 
 const STEP = 1 / 60.0;
 
@@ -328,18 +326,13 @@ const timer = new Timer(STEP, 20, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    const dist = 1 + 0.65 * Math.sin(now * 1.17)
+    const dist = 1 + 0.35 * Math.sin(now * 0.17)
     vec3.set(cameraPosition, 0, -1, -25 * dist);
 
     mat4.perspective(camera, 0.8, canvas.width / canvas.height, 1, 80);
     mat4.translate(camera, camera, cameraPosition);
     mat4.rotateX(camera, camera, -Math.PI / 4 + Math.sin(now * 0.31) * 0.2);
     mat4.rotateZ(camera, camera, now * 0.05);
-
-    vec4.set(cameraX, 1, 0, 0, 1);
-    vec4.transformMat4(cameraX, cameraX, camera);
-    vec4.set(cameraY, 0, 1, 0, 1);
-    vec4.transformMat4(cameraY, cameraY, camera);
 
     const pulseSpeed = 1.2 * Math.sin(now * 0.8);
     const pulse = Math.max(0, Math.sin(5.0 * now + pulseSpeed) * 10.0 - 9.0);
