@@ -125,6 +125,8 @@ function baabaa() {
 baabaa();
 
 const ditherLib = `
+// @todo credit from https://github.com/hughsk/glsl-dither
+
 float dither4x4(vec2 position) {
   int x = int(mod(position.x, 4.0));
   int y = int(mod(position.y, 4.0));
@@ -148,14 +150,8 @@ float dither4x4(vec2 position) {
     if (index == 14) return 0.875;
     if (index == 15) return 0.375;
   }
-
-  // return limit;
 }
 `;
-
-for (var i = 0; i < 100; i++) {
-    // doodoo();
-}
 
 // setup draw
 const debugDraw = new b2DebugDraw();
