@@ -191,9 +191,14 @@ if (!regl) {
             }
 
             void main() {
-                float initialFade = clamp(place * 20.0 - 1.9, 0.0, 1.0);
+                float spawnSizeFactor = clamp(place * 20.0 - 1.9, 0.0, 1.0);
+                float pulseSizeFactor = 1.0 + 0.1 * pulse;
 
                 instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
+
+                float unstableModeSizeFactor = 1.0 + instability * 0.5;
+                float stableGrowthSizeFactor = 1.0 + 0.2 * place * (1.0 - 0.8 * instability);
+
                 flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
                     sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
                     0.0,
@@ -201,7 +206,12 @@ if (!regl) {
                 );
 
                 vec4 worldPosition = vec4(
-                    origin + position * radius * initialFade * (1.0 + 0.1 * pulse) * (1.0 + instability * 0.5) * (1.0 + 0.2 * place * (1.0 - 0.8 * instability)),
+                    origin + position * radius * (
+                        spawnSizeFactor *
+                        pulseSizeFactor *
+                        unstableModeSizeFactor *
+                        stableGrowthSizeFactor
+                    ),
                     computeParticleZ(),
                     1.0
                 );
