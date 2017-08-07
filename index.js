@@ -71,6 +71,7 @@ function doodoo() {
     const color = new onecolor.HSL(0.05 + Math.random() * 0.15, 0.6 + Math.random() * 0.3, 0.4 + Math.random() * 0.2);
 
     main.particleRadius = radius;
+    main.particleVelocity = vec2.fromValues(0, 0);
     main.particleSpeed = 0;
     main.particleColor = color.rgb();
 
@@ -181,6 +182,7 @@ if (!regl) {
             uniform vec2 origin;
             uniform float radius;
             uniform float speed;
+            uniform vec2 velocity;
             uniform mat4 camera;
             attribute vec2 position;
 
@@ -269,6 +271,7 @@ if (!regl) {
             color: regl.prop('color'),
             radius: regl.prop('radius'),
             speed: regl.prop('speed'),
+            velocity: regl.prop('velocity'),
             camera: regl.prop('camera')
         },
 
@@ -354,6 +357,10 @@ const timer = new Timer(STEP, 20, function () {
             const vel = b.GetLinearVelocity();
             const speed = b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
 
+            vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
+            b.particleVelocity[0] += vel.x * 0.2;
+            b.particleVelocity[1] += vel.y * 0.2;
+
             cmd({
                 aspectRatio: aspectRatio,
                 time: now,
@@ -363,6 +370,7 @@ const timer = new Timer(STEP, 20, function () {
                 color: bodyColor,
                 radius: b.particleRadius,
                 speed: speed,
+                velocity: b.particleVelocity,
                 camera: camera
             });
         });
