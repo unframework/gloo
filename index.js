@@ -318,6 +318,14 @@ const timer = new Timer(STEP, 20, function () {
                 return;
             }
 
+            // dampen the speed
+            const vel = b.GetLinearVelocity();
+            b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
+
+            vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
+            b.particleVelocity[0] += vel.x * 0.2;
+            b.particleVelocity[1] += vel.y * 0.2;
+
             imp.x = (1 / (1 + 10 * l)) * 0.5 * pos.x / l;
             imp.y = (1 / (1 + 10 * l)) * 0.5 * pos.y / l;
             b.ApplyImpulse(imp, pos);
@@ -368,14 +376,6 @@ const timer = new Timer(STEP, 20, function () {
             vec2.set(bodyOrigin, pos.x, pos.y);
             vec4.set(bodyColor, b.particleColor.red(), b.particleColor.green(), b.particleColor.blue(), 1)
 
-            // dampen the speed (@todo this in physics step)
-            const vel = b.GetLinearVelocity();
-            const speed = b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
-
-            vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
-            b.particleVelocity[0] += vel.x * 0.2;
-            b.particleVelocity[1] += vel.y * 0.2;
-
             cmd({
                 aspectRatio: aspectRatio,
                 time: now,
@@ -384,7 +384,7 @@ const timer = new Timer(STEP, 20, function () {
                 origin: bodyOrigin,
                 color: bodyColor,
                 radius: b.particleRadius,
-                speed: speed,
+                speed: b.particleSpeed,
                 velocity: b.particleVelocity,
                 camera: camera
             });

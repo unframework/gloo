@@ -7,6 +7,6 @@
 - speed-dependent light flicker (oxidation style)
 - add position damping and reduce solver rigidity to help otherworldliness
 - use dithering
-- vertical emissions (up and down)
+- vertical emissions (up and down), simulate passing through Perlin field like smoke
 - spiral arrangement?
 - credit
