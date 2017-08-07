@@ -7,5 +7,6 @@
 - speed-dependent light flicker (oxidation style)
 - add position damping and reduce solver rigidity to help otherworldliness
 - use dithering
+- vertical emissions (up and down)
 - spiral arrangement?
 - credit

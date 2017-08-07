@@ -199,10 +199,10 @@ if (!regl) {
                 float spawnSizeFactor = clamp(place * 20.0 - 1.9, 0.0, 1.0);
                 float pulseSizeFactor = 1.0 + 0.1 * pulse;
 
-                float unstableModeSizeFactor = 1.0 + instability * 0.5;
+                float unstableModeSizeFactor = 1.0 + instability * 0.75;
                 float stableGrowthSizeFactor = 1.0 + 0.15 * place * (1.0 - 0.8 * instability);
 
-                float flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
+                float unstableFlicker = -0.05 + 0.4 * fract(radius * 1000.0) + 0.2 * clamp(
                     sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
                     0.0,
                     1.0
@@ -214,8 +214,8 @@ if (!regl) {
                     1.0
                 );
 
-                float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.05);
-                alpha = baseAlpha - instability + instability * flicker;
+                float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.08);
+                alpha = baseAlpha * (1.0 - instability + instability * unstableFlicker);
 
                 facePosition = position;
 
@@ -338,7 +338,7 @@ const timer = new Timer(STEP, 20, function () {
 
     mat4.rotateX(camera, camera, -Math.PI / 6 + Math.cos(now * 0.23 - 1.2) * (Math.PI / 6));
 
-    vec3.set(cameraPosition, 0, 0, -4);
+    vec3.set(cameraPosition, 0, 0, -4.5);
     mat4.translate(camera, camera, cameraPosition);
 
     mat4.rotateZ(camera, camera, now * 0.05);
