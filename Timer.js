@@ -1,5 +1,6 @@
 function Timer(physicsStepDuration, initialRun, onTick, onFrame) {
     var lastTime = performance.now(),
+        initialTime = null,
         physicsStepAccumulator = initialRun,
         self = this;
 
@@ -22,7 +23,11 @@ function Timer(physicsStepDuration, initialRun, onTick, onFrame) {
             physicsStepAccumulator -= physicsStepDuration;
         }
 
-        onFrame(time / 1000);
+        if (initialTime === null) {
+            initialTime = time;
+        }
+
+        onFrame((time - initialTime) / 1000);
 
         // restart
         requestAnimationFrame(update);
