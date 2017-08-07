@@ -335,18 +335,21 @@ const timer = new Timer(STEP, 20, function () {
 
     world.Step(STEP, 3, 3);
 }, function (now) {
-    const dist = 1 + 0.35 * Math.sin(now * 0.17)
-
     mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
 
-    vec3.set(cameraPosition, 0, 0, -25 * dist);
+    // camera shake and zoom
+    const zoomAmount = 1 + 0.35 * Math.sin(now * 0.17)
+    vec3.set(cameraPosition, 0.02 * Math.sin(now * 3.43), 0.02 * Math.cos(now * 2.31), -25 * zoomAmount);
     mat4.translate(camera, camera, cameraPosition);
 
+    // pitch
     mat4.rotateX(camera, camera, -Math.PI / 6 + Math.cos(now * 0.23 - 1.2) * (Math.PI / 6));
 
+    // displace the scene downwards a bit
     vec3.set(cameraPosition, 0, 0, -4.5);
     mat4.translate(camera, camera, cameraPosition);
 
+    // slow orbiting
     mat4.rotateZ(camera, camera, now * 0.05);
 
     const pulseSpeed = 1.2 * Math.sin(now * 0.8);
