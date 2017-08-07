@@ -243,7 +243,7 @@ if (!regl) {
 
                 // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
                 vec2 fp2 = facePosition * facePosition;
-                if (sqrt(fp2.x + fp2.y) > 1.0) {
+                if (fp2.x + fp2.y > 1.0) {
                     discard;
                 }
 
