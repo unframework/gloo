@@ -318,14 +318,7 @@ const timer = new Timer(STEP, 20, function () {
                 return;
             }
 
-            // dampen the speed
-            const vel = b.GetLinearVelocity();
-            b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
-
-            vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
-            b.particleVelocity[0] += vel.x * 0.2;
-            b.particleVelocity[1] += vel.y * 0.2;
-
+            // apply outward pressure from center
             imp.x = (1 / (1 + 10 * l)) * 0.5 * pos.x / l;
             imp.y = (1 / (1 + 10 * l)) * 0.5 * pos.y / l;
             b.ApplyImpulse(imp, pos);
@@ -342,6 +335,17 @@ const timer = new Timer(STEP, 20, function () {
     }
 
     world.Step(STEP, 3, 3);
+
+    // collect stats for rendering
+    bodyList.forEach((b, bi) => {
+        // dampen the speed
+        const vel = b.GetLinearVelocity();
+        b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
+
+        vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
+        b.particleVelocity[0] += vel.x * 0.2;
+        b.particleVelocity[1] += vel.y * 0.2;
+    });
 }, function (now) {
     mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
 
