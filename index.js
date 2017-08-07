@@ -200,7 +200,7 @@ if (!regl) {
                 float pulseSizeFactor = 1.0 + 0.1 * pulse;
 
                 float unstableModeSizeFactor = 1.0 + instability * 0.5;
-                float stableGrowthSizeFactor = 1.0 + 0.2 * place * (1.0 - 0.8 * instability);
+                float stableGrowthSizeFactor = 1.0 + 0.15 * place * (1.0 - 0.8 * instability);
 
                 float flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
                     sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
@@ -219,7 +219,7 @@ if (!regl) {
 
                 facePosition = position;
 
-                gl_Position = camera * center + 2.0 * vec4(position.x * aspectRatio, position.y, 0, 0) * radius * (
+                gl_Position = camera * center + 2.75 * vec4(position.x * aspectRatio, position.y, 0, 0) * radius * (
                     spawnSizeFactor *
                     pulseSizeFactor *
                     unstableModeSizeFactor *
@@ -330,11 +330,17 @@ const timer = new Timer(STEP, 20, function () {
     world.Step(STEP, 3, 3);
 }, function (now) {
     const dist = 1 + 0.35 * Math.sin(now * 0.17)
-    vec3.set(cameraPosition, 0, -1, -25 * dist);
 
-    mat4.perspective(camera, 0.8, canvas.width / canvas.height, 1, 80);
+    mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
+
+    vec3.set(cameraPosition, 0, 0, -25 * dist);
     mat4.translate(camera, camera, cameraPosition);
-    mat4.rotateX(camera, camera, -Math.PI / 4 + Math.sin(now * 0.31) * 0.2);
+
+    mat4.rotateX(camera, camera, -Math.PI / 6 + Math.cos(now * 0.23 - 1.2) * (Math.PI / 6));
+
+    vec3.set(cameraPosition, 0, 0, -4);
+    mat4.translate(camera, camera, cameraPosition);
+
     mat4.rotateZ(camera, camera, now * 0.05);
 
     const pulseSpeed = 1.2 * Math.sin(now * 0.8);
