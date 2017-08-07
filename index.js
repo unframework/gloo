@@ -189,18 +189,16 @@ if (!regl) {
             varying float alpha;
             varying vec2 facePosition;
 
-            float computeParticleZ() {
+            float computeParticleZ(float place) {
                 return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place);
             }
 
             void main() {
                 float instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
 
-                float spawnSizeFactor = clamp(place * 20.0 - 1.9, 0.0, 1.0);
+                float spawnSizeFactor = clamp((place - 0.8) * 20.0, 0.0, 1.0);
                 float pulseSizeFactor = 1.0 + 0.1 * pulse;
-
-                float unstableModeSizeFactor = 1.0 + instability * 0.5;
-                float stableGrowthSizeFactor = 1.0 + 0.2 * place * (1.0 - 0.8 * instability);
+                float growthSizeFactor = 1.0 + 0.2 * place;
 
                 float flicker = 0.1 + 0.5 * fract(radius * 1000.0) + 0.3 * clamp(
                     sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
@@ -210,7 +208,7 @@ if (!regl) {
 
                 vec4 center = vec4(
                     origin,
-                    computeParticleZ(),
+                    computeParticleZ(place),
                     1.0
                 );
 
@@ -219,12 +217,20 @@ if (!regl) {
 
                 facePosition = position;
 
-                gl_Position = camera * center + 2.0 * vec4(position.x * aspectRatio, position.y, 0, 0) * radius * (
+                float stableRadius = radius * (
                     spawnSizeFactor *
                     pulseSizeFactor *
-                    unstableModeSizeFactor *
-                    stableGrowthSizeFactor
+                    growthSizeFactor
                 );
+
+                vec2 crossVelocity = vec2(-velocity.y, velocity.x);
+                vec2 unstableCorner = spawnSizeFactor * 0.095 * (position.x - 0.9) * velocity + radius * 0.75 * position.y * crossVelocity / speed;
+                unstableCorner += origin;
+                vec2 uc2 = unstableCorner * unstableCorner;
+
+                vec4 unstablePosition = camera * vec4(unstableCorner, computeParticleZ(sqrt(uc2.x + uc2.y)), 1.0);
+                vec4 stablePosition = camera * center + 2.0 * vec4(position.x * aspectRatio, position.y, 0, 0) * stableRadius;
+                gl_Position = stablePosition * (1.0 - instability) + unstablePosition * instability;
             }
         `,
 
