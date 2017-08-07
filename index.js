@@ -75,6 +75,8 @@ function doodoo() {
     main.particleSpeed = 0;
     main.particleColor = color.rgb();
 
+    main.speckList = [];
+
     return main;
 }
 
@@ -157,7 +159,7 @@ float dither4x4(vec2 position) {
 
 // setup draw
 const debugDraw = new b2DebugDraw();
-var cmd;
+var cmd, cmd2;
 
 if (!regl) {
     const ctx = canvas.getContext('2d');
@@ -284,6 +286,95 @@ if (!regl) {
         primitive: 'triangle fan',
         count: 4
     });
+
+    cmd2 = regl({
+        vert: `
+            precision mediump float;
+
+            uniform float aspectRatio;
+            uniform float time;
+            uniform float pulse;
+            uniform vec2 origin;
+            uniform float speck;
+            uniform float radius;
+            uniform float speed;
+            uniform vec2 velocity;
+            uniform mat4 camera;
+            attribute vec2 position;
+
+            varying float alpha;
+            varying vec2 facePosition;
+
+            float computeParticleZ(float place) {
+                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place) + speck * 0.3 + speck * speck * 0.01;
+            }
+
+            void main() {
+                vec2 o2 = origin * origin;
+
+                vec4 center = vec4(
+                    origin,
+                    computeParticleZ(sqrt(o2.x + o2.y)) + 0.2,
+                    1.0
+                );
+
+                facePosition = position;
+                alpha = 0.15;
+
+                gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
+            }
+        `,
+
+        frag: `
+            precision mediump float;
+
+            uniform vec4 color;
+
+            varying float alpha;
+            varying vec2 facePosition;
+
+            ${ditherLib}
+
+            void main() {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+                // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
+                vec2 fp2 = facePosition * facePosition;
+                if (fp2.x + fp2.y > 1.0) {
+                    discard;
+                }
+
+                if (dither4x4(gl_FragCoord.xy) > alpha) {
+                    discard;
+                }
+            }
+        `,
+
+        attributes: {
+            position: regl.buffer([
+                [ -1, -1 ],
+                [ 1, -1 ],
+                [ 1,  1 ],
+                [ -1, 1 ]
+            ])
+        },
+
+        uniforms: {
+            aspectRatio: regl.prop('aspectRatio'),
+            time: regl.prop('time'),
+            pulse: regl.prop('pulse'),
+            origin: regl.prop('origin'),
+            color: regl.prop('color'),
+            speck: regl.prop('speck'),
+            radius: regl.prop('radius'),
+            speed: regl.prop('speed'),
+            velocity: regl.prop('velocity'),
+            camera: regl.prop('camera')
+        },
+
+        primitive: 'triangle fan',
+        count: 4
+    });
 }
 
 const bodyOrigin = vec2.create();
@@ -336,7 +427,7 @@ const timer = new Timer(STEP, 20, function () {
 
     world.Step(STEP, 3, 3);
 
-    // collect stats for rendering
+    // collect stats for rendering and update specks
     bodyList.forEach((b, bi) => {
         // dampen the speed
         const vel = b.GetLinearVelocity();
@@ -345,6 +436,30 @@ const timer = new Timer(STEP, 20, function () {
         vec2.scale(b.particleVelocity, b.particleVelocity, 0.8);
         b.particleVelocity[0] += vel.x * 0.2;
         b.particleVelocity[1] += vel.y * 0.2;
+
+        // update specks
+        const speckCount = b.speckList.length
+        for (let i = 0; i < speckCount; i += 1) {
+            b.speckList[i] += STEP;
+        }
+
+        // generate specks if appropriate
+        if (b.particleSpeed < 0.3) {
+            // time until next speck increases
+            const nextSpeckTime = speckCount * speckCount * 0.5;
+
+            if (speckCount < 1 || b.speckList[speckCount - 1] > nextSpeckTime) {
+                b.speckList.push(0);
+            }
+        } else {
+            // trim all off
+            b.speckList.length = 0;
+        }
+
+        // remove old specks
+        if (speckCount > 6) {
+            b.speckList.shift();
+        }
     });
 }, function (now) {
     mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
@@ -375,7 +490,7 @@ const timer = new Timer(STEP, 20, function () {
             depth: 1
         });
 
-        bodyList.forEach((b, bi) => {
+        bodyList.forEach(b => {
             const pos = b.GetPosition();
             vec2.set(bodyOrigin, pos.x, pos.y);
             vec4.set(bodyColor, b.particleColor.red(), b.particleColor.green(), b.particleColor.blue(), 1)
@@ -392,6 +507,27 @@ const timer = new Timer(STEP, 20, function () {
                 velocity: b.particleVelocity,
                 camera: camera
             });
+        });
+
+        bodyList.forEach(b => {
+            const pos = b.GetPosition();
+            vec2.set(bodyOrigin, pos.x, pos.y);
+            vec4.set(bodyColor, b.particleColor.red(), b.particleColor.green(), b.particleColor.blue(), 1)
+
+            b.speckList.forEach(s => {
+                cmd2({
+                    aspectRatio: aspectRatio,
+                    time: now,
+                    pulse: pulse,
+                    origin: bodyOrigin,
+                    color: bodyColor,
+                    speck: s,
+                    radius: b.particleRadius,
+                    speed: b.particleSpeed,
+                    velocity: b.particleVelocity,
+                    camera: camera
+                });
+            })
         });
     }
 });
