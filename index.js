@@ -194,6 +194,7 @@ if (!regl) {
             }
 
             void main() {
+                float particleRandom = fract(radius * 10000.0);
                 float instability = clamp((speed - 0.3) * 10.0, 0.0, 1.0);
 
                 float spawnSizeFactor = clamp(place * 20.0 - 1.9, 0.0, 1.0);
@@ -202,11 +203,13 @@ if (!regl) {
                 float unstableModeSizeFactor = 1.0 + instability * 0.75;
                 float stableGrowthSizeFactor = 1.0 + 0.15 * place * (1.0 - 0.8 * instability);
 
-                float unstableFlicker = -0.05 + 0.4 * fract(radius * 1000.0) + 0.2 * clamp(
-                    sin(time * 10.0 * (fract(radius * 10000.0) + 1.0)) * 10.0 - 9.0,
+                float flickerAmount = clamp(
+                    sin(time * 8.0 * (particleRandom + 1.0)) * 10.0 - 9.0,
                     0.0,
                     1.0
                 );
+
+                float unstableFlicker = -0.05 + 0.4 * particleRandom + 0.2 * flickerAmount;
 
                 vec4 center = vec4(
                     origin,
@@ -215,7 +218,10 @@ if (!regl) {
                 );
 
                 float baseAlpha = 1.0 / (1.0 + radius * place * place * 0.08);
-                alpha = baseAlpha * (1.0 - instability + instability * unstableFlicker);
+                alpha = baseAlpha * (
+                    (1.0 - instability) * (1.0 + flickerAmount * 0.2) +
+                    instability * unstableFlicker
+                );
 
                 facePosition = position;
 
