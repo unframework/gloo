@@ -438,17 +438,20 @@ const timer = new Timer(STEP, 20, function () {
         b.particleVelocity[1] += vel.y * 0.2;
 
         // generate specks if appropriate
-        if (b.particleSpeed < 0.3 && pos.x * pos.x + pos.y * pos.y > 1) {
+        if (b.particleSpeed < 0.06 && pos.x * pos.x + pos.y * pos.y > 1) {
             if (b.speckCountdown === null) {
                 // initial delay until generating a speck
-                b.speckCountdown = Math.random() * 0.5;
+                b.speckCountdown = Math.random() * 1.5;
             } else {
                 // countdown
                 b.speckCountdown -= STEP;
             }
 
             if (b.speckCountdown < 0) {
-                b.speckCountdown += Math.random() * 5;
+                // delay either for a consistent amount in a series or for a longer cool-off
+                b.speckCountdown += Math.random() < 0.65
+                    ? b.particleRadius * 4 + Math.random() * 0.1 // slight "breath" to the cadence
+                    : 1 + Math.random() * 5;
 
                 speckList.push(vec4.fromValues(pos.x, pos.y, 0, b.particleRadius));
             }
