@@ -302,7 +302,11 @@ if (!regl) {
             varying vec2 facePosition;
 
             float computeParticleZ(float place) {
-                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place) + speck.z * 0.3 + speck.z * speck.z * 0.01;
+                float age = speck.z;
+                float speckOffset = age * 0.3 + age * age * 0.02;
+
+                // @todo make a reusable function
+                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place) + speckOffset;
             }
 
             void main() {
@@ -316,7 +320,7 @@ if (!regl) {
                 );
 
                 facePosition = position;
-                alpha = 0.15;
+                alpha = 0.65 - speck.w * 2.0;
 
                 float radius = speck.w;
                 gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
