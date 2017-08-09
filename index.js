@@ -50,6 +50,7 @@ const regl = require('regl')({
 
 // wurld
 const world = new b2World(new b2Vec2(0, 0), true);
+const speckList = [];
 
 function doodoo() {
     const radius = 0.1 + Math.random() * 0.08;
@@ -74,8 +75,7 @@ function doodoo() {
     main.particleVelocity = vec2.fromValues(0, 0);
     main.particleSpeed = 0;
     main.particleColor = color.rgb();
-
-    main.speckList = [];
+    main.speckCountdown = 0;
 
     return main;
 }
@@ -294,11 +294,7 @@ if (!regl) {
             uniform float aspectRatio;
             uniform float time;
             uniform float pulse;
-            uniform vec2 origin;
-            uniform float speck;
-            uniform float radius;
-            uniform float speed;
-            uniform vec2 velocity;
+            uniform vec3 speck;
             uniform mat4 camera;
             attribute vec2 position;
 
@@ -306,10 +302,11 @@ if (!regl) {
             varying vec2 facePosition;
 
             float computeParticleZ(float place) {
-                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place) + speck * 0.3 + speck * speck * 0.01;
+                return place * 0.2 + place * place * 0.03 + 1.0 / (2.0 * place) + speck.z * 0.3 + speck.z * speck.z * 0.01;
             }
 
             void main() {
+                vec2 origin = speck.xy;
                 vec2 o2 = origin * origin;
 
                 vec4 center = vec4(
@@ -321,6 +318,7 @@ if (!regl) {
                 facePosition = position;
                 alpha = 0.15;
 
+                float radius = 0.1;
                 gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
             }
         `,
@@ -427,8 +425,10 @@ const timer = new Timer(STEP, 20, function () {
 
     world.Step(STEP, 3, 3);
 
-    // collect stats for rendering and update specks
+    // collect stats for rendering and generate specks
     bodyList.forEach((b, bi) => {
+        const pos = b.GetPosition();
+
         // dampen the speed
         const vel = b.GetLinearVelocity();
         b.particleSpeed = 0.8 * b.particleSpeed + 0.2 * Math.hypot(vel.x, vel.y);
@@ -437,29 +437,42 @@ const timer = new Timer(STEP, 20, function () {
         b.particleVelocity[0] += vel.x * 0.2;
         b.particleVelocity[1] += vel.y * 0.2;
 
-        // update specks
-        const speckCount = b.speckList.length
-        for (let i = 0; i < speckCount; i += 1) {
-            b.speckList[i] += STEP;
-        }
-
         // generate specks if appropriate
-        if (b.particleSpeed < 0.3) {
-            // time until next speck increases
-            const nextSpeckTime = speckCount * speckCount * 0.5;
+        if (b.particleSpeed < 0.3 && pos.x * pos.x + pos.y * pos.y > 1) {
+            if (b.speckCountdown === null) {
+                // initial delay until generating a speck
+                b.speckCountdown = Math.random() * 0.5;
+            } else {
+                // countdown
+                b.speckCountdown -= STEP;
+            }
 
-            if (speckCount < 1 || b.speckList[speckCount - 1] > nextSpeckTime) {
-                b.speckList.push(0);
+            if (b.speckCountdown < 0) {
+                b.speckCountdown += Math.random() * 5;
+
+                speckList.push(vec3.fromValues(pos.x, pos.y, 0));
             }
         } else {
-            // trim all off
-            b.speckList.length = 0;
+            // no specks
+            b.speckCountdown = null;
         }
+    });
 
-        // remove old specks
-        if (speckCount > 6) {
-            b.speckList.shift();
+    // update specks
+    delList.length = 0;
+
+    speckList.forEach((speck, si) => {
+        speck[2] += STEP;
+
+        if (speck[2] > 25) {
+            delList.push(si);
         }
+    });
+
+    // should be monotonously increasing, so no issues due to splice
+    delList.forEach(si => {
+        const s = speckList[si];
+        speckList.splice(si, 1);
     });
 }, function (now) {
     mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
@@ -509,25 +522,14 @@ const timer = new Timer(STEP, 20, function () {
             });
         });
 
-        bodyList.forEach(b => {
-            const pos = b.GetPosition();
-            vec2.set(bodyOrigin, pos.x, pos.y);
-            vec4.set(bodyColor, b.particleColor.red(), b.particleColor.green(), b.particleColor.blue(), 1)
-
-            b.speckList.forEach(s => {
-                cmd2({
-                    aspectRatio: aspectRatio,
-                    time: now,
-                    pulse: pulse,
-                    origin: bodyOrigin,
-                    color: bodyColor,
-                    speck: s,
-                    radius: b.particleRadius,
-                    speed: b.particleSpeed,
-                    velocity: b.particleVelocity,
-                    camera: camera
-                });
-            })
+        speckList.forEach(s => {
+            cmd2({
+                aspectRatio: aspectRatio,
+                time: now,
+                pulse: pulse,
+                speck: s,
+                camera: camera
+            });
         });
     }
 });
