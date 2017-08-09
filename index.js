@@ -320,9 +320,9 @@ if (!regl) {
                 );
 
                 facePosition = position;
-                alpha = 0.65 - speck.w * 2.0;
+                alpha = 0.65 - speck.w * 3.0;
 
-                float radius = speck.w;
+                float radius = speck.w * speck.w * 10.0 - 0.05;
                 gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
             }
         `,
