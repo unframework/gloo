@@ -294,7 +294,7 @@ if (!regl) {
             uniform float aspectRatio;
             uniform float time;
             uniform float pulse;
-            uniform vec3 speck;
+            uniform vec4 speck;
             uniform mat4 camera;
             attribute vec2 position;
 
@@ -318,7 +318,7 @@ if (!regl) {
                 facePosition = position;
                 alpha = 0.15;
 
-                float radius = 0.1;
+                float radius = speck.w;
                 gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
             }
         `,
@@ -450,7 +450,7 @@ const timer = new Timer(STEP, 20, function () {
             if (b.speckCountdown < 0) {
                 b.speckCountdown += Math.random() * 5;
 
-                speckList.push(vec3.fromValues(pos.x, pos.y, 0));
+                speckList.push(vec4.fromValues(pos.x, pos.y, 0, b.particleRadius));
             }
         } else {
             // no specks
