@@ -379,6 +379,60 @@ if (!regl) {
         primitive: 'triangle fan',
         count: 4
     });
+
+    cmd3 = regl({
+        vert: `
+            precision mediump float;
+
+            uniform mat4 camera;
+            attribute vec2 position;
+
+            varying vec2 facePosition;
+
+            void main() {
+                facePosition = position;
+
+                gl_Position = camera * vec4(position.x * 80.0, position.y * 80.0, 0, 1.0);
+            }
+        `,
+
+        frag: `
+            precision mediump float;
+
+            #define M_PI 3.1415926535897932384626433832795
+
+            uniform float aspectRatio;
+
+            varying vec2 facePosition;
+
+            void main() {
+                vec2 fp2 = facePosition * facePosition;
+
+                float angle = atan(facePosition.y, facePosition.x) / M_PI;
+                float dist = (fp2.x + fp2.y) * 100.0;
+
+                float intensity = mod(angle, 1.0) * mod(dist, 1.0) < 0.25 ? 1.0 : 0.8;
+                gl_FragColor = vec4(vec3(0.3, 0.35, 0.4) * intensity, 1.0);
+            }
+        `,
+
+        attributes: {
+            position: regl.buffer([
+                [ -1, -1 ],
+                [ 1, -1 ],
+                [ 1,  1 ],
+                [ -1, 1 ]
+            ])
+        },
+
+        uniforms: {
+            aspectRatio: regl.prop('aspectRatio'),
+            camera: regl.prop('camera')
+        },
+
+        primitive: 'triangle fan',
+        count: 4
+    });
 }
 
 const bodyOrigin = vec2.create();
@@ -511,8 +565,12 @@ const timer = new Timer(STEP, 20, function () {
         world.DrawDebugData();
     } else {
         regl.clear({
-            color: [ 0.02, 0.015, 0.01, 1 ],
             depth: 1
+        });
+
+        cmd3({
+            aspectRatio: aspectRatio,
+            camera: camera
         });
 
         bodyList.forEach(b => {
