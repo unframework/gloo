@@ -299,6 +299,7 @@ if (!regl) {
             attribute vec2 position;
 
             varying float alpha;
+            varying float intensity;
             varying vec2 facePosition;
 
             float computeParticleZ(float place) {
@@ -312,15 +313,18 @@ if (!regl) {
             void main() {
                 vec2 origin = speck.xy;
                 vec2 o2 = origin * origin;
+                float vOffset = computeParticleZ(sqrt(o2.x + o2.y));
+
+                intensity = sin(vOffset * speck.w * 5.0) * 0.2 + 0.8;
 
                 vec4 center = vec4(
                     origin,
-                    computeParticleZ(sqrt(o2.x + o2.y)) + 0.2,
+                    vOffset + 0.2,
                     1.0
                 );
 
                 facePosition = position;
-                alpha = clamp(speck.z - speck.w * 4.0, 0.0, 0.95);
+                alpha = clamp(speck.z - speck.w * 2.0, 0.0, 0.95);
 
                 float radius = speck.w * speck.w * 7.5 - 0.02;
                 gl_Position = camera * center + 2.5 * radius * vec4(position.x * aspectRatio, position.y, 0, 0);
@@ -333,12 +337,13 @@ if (!regl) {
             uniform vec4 color;
 
             varying float alpha;
+            varying float intensity;
             varying vec2 facePosition;
 
             ${ditherLib}
 
             void main() {
-                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+                gl_FragColor = vec4(color.r * intensity, color.g * intensity, color.b * intensity, 1.0);
 
                 // discarding after assigning gl_FragColor, apparently may not discard otherwise due to bug
                 vec2 fp2 = facePosition * facePosition;
@@ -368,9 +373,6 @@ if (!regl) {
             origin: regl.prop('origin'),
             color: regl.prop('color'),
             speck: regl.prop('speck'),
-            radius: regl.prop('radius'),
-            speed: regl.prop('speed'),
-            velocity: regl.prop('velocity'),
             camera: regl.prop('camera')
         },
 
@@ -502,6 +504,9 @@ const timer = new Timer(STEP, 20, function () {
     const pulseSpeed = 1.2 * Math.sin(now * 0.8);
     const pulse = Math.max(0, Math.sin(5.0 * now + pulseSpeed) * 10.0 - 9.0);
 
+    // use a slight flicker in saturation
+    const speckColor = new onecolor.HSL(0.5 + Math.sin(now) * 0.075, 0.6 + pulse * 0.1 + Math.random() * 0.08, 0.85);
+
     if (!regl) {
         world.DrawDebugData();
     } else {
@@ -529,12 +534,15 @@ const timer = new Timer(STEP, 20, function () {
             });
         });
 
+        vec4.set(bodyColor, speckColor.red(), speckColor.green(), speckColor.blue(), 1)
+
         speckList.forEach(s => {
             cmd2({
                 aspectRatio: aspectRatio,
                 time: now,
                 pulse: pulse,
                 speck: s,
+                color: bodyColor,
                 camera: camera
             });
         });
