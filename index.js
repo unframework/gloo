@@ -538,7 +538,7 @@ const timer = new Timer(STEP, 20, function () {
         speckList.splice(si, 1);
     });
 }, function (now) {
-    mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 80);
+    mat4.perspective(camera, 0.6, canvas.width / canvas.height, 1, 120);
 
     // camera shake and zoom
     const zoomAmount = 1 + 0.35 * Math.sin(now * 0.17)
