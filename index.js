@@ -409,10 +409,11 @@ if (!regl) {
                 vec2 fp2 = facePosition * facePosition;
 
                 float angle = atan(facePosition.y, facePosition.x) / M_PI;
-                float dist = (fp2.x + fp2.y) * 100.0;
+                float dist = sqrt(fp2.x + fp2.y) * 50.0;
+                float markers = sqrt(dist) * 2.0 + dist * 0.05;
 
-                float intensity = mod(angle, 1.0) * mod(dist, 1.0) < 0.25 ? 1.0 : 0.8;
-                gl_FragColor = vec4(vec3(0.3, 0.35, 0.4) * intensity, 1.0);
+                float intensity = (mod(angle * 3.5, 1.0) - 0.5) * (mod(markers, 1.0) - 0.5) < 0.0 ? 1.0 : 0.85;
+                gl_FragColor = vec4(vec3(0.15, 0.25, 0.3) * intensity, 1.0);
             }
         `,
 
